@@ -110,7 +110,7 @@ export default function Reports() {
 
         {currentUser.role === "leader" && (
           <Card className="p-6 lg:col-span-2">
-            <h3 className="font-display font-semibold text-lg mb-4">Por funcionário</h3>
+            <h3 className="font-display font-semibold text-lg mb-4">Tarefas por funcionário</h3>
             <div className="space-y-3">
               {users.filter(u => u.role === "employee").map(u => {
                 const userTasks = visible.filter(t => t.assignee_id === u.id);
