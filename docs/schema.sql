@@ -1,0 +1,4 @@
+-- UNA — Schema completo (rodar no Supabase SQL Editor)
+-- Veja src/integrations/supabase/types.ts para os tipos atualizados.
+-- O schema já foi aplicado via migration ao seu projeto Lovable Cloud.
+-- Este arquivo serve como referência/backup.
