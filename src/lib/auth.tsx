@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         loading,
         memberships,
-        refreshMemberships: async () => user && loadMemberships(user.id),
+        refreshMemberships: async () => { if (user) await loadMemberships(user.id); },
         signOut: async () => { await supabase.auth.signOut(); },
       }}
     >
