@@ -18,12 +18,14 @@ export type Database = {
         Row: {
           client_id: string
           clinic_id: string
+          confirmed: boolean
           created_at: string
           ends_at: string
           id: string
           notes: string | null
           procedure_id: string | null
           professional_id: string
+          reminder_sent: boolean
           room_id: string | null
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
@@ -31,12 +33,14 @@ export type Database = {
         Insert: {
           client_id: string
           clinic_id: string
+          confirmed?: boolean
           created_at?: string
           ends_at: string
           id?: string
           notes?: string | null
           procedure_id?: string | null
           professional_id: string
+          reminder_sent?: boolean
           room_id?: string | null
           starts_at: string
           status?: Database["public"]["Enums"]["appointment_status"]
@@ -44,12 +48,14 @@ export type Database = {
         Update: {
           client_id?: string
           clinic_id?: string
+          confirmed?: boolean
           created_at?: string
           ends_at?: string
           id?: string
           notes?: string | null
           procedure_id?: string | null
           professional_id?: string
+          reminder_sent?: boolean
           room_id?: string | null
           starts_at?: string
           status?: Database["public"]["Enums"]["appointment_status"]
@@ -213,38 +219,74 @@ export type Database = {
       }
       clients: {
         Row: {
+          address: string | null
+          allergies: string[] | null
+          avatar_url: string | null
           birth_date: string | null
+          chronic_conditions: string[] | null
           clinic_id: string
+          cpf: string | null
           created_at: string
           email: string | null
+          emergency_contact: string | null
           full_name: string
+          gender: string | null
+          how_found_us: string | null
           id: string
+          medications: string[] | null
           notes: string | null
           phone: string | null
+          previous_procedures: Json | null
+          skin_type: string | null
+          surgeries: Json | null
           tags: string[] | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
+          allergies?: string[] | null
+          avatar_url?: string | null
           birth_date?: string | null
+          chronic_conditions?: string[] | null
           clinic_id: string
+          cpf?: string | null
           created_at?: string
           email?: string | null
+          emergency_contact?: string | null
           full_name: string
+          gender?: string | null
+          how_found_us?: string | null
           id?: string
+          medications?: string[] | null
           notes?: string | null
           phone?: string | null
+          previous_procedures?: Json | null
+          skin_type?: string | null
+          surgeries?: Json | null
           tags?: string[] | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
+          allergies?: string[] | null
+          avatar_url?: string | null
           birth_date?: string | null
+          chronic_conditions?: string[] | null
           clinic_id?: string
+          cpf?: string | null
           created_at?: string
           email?: string | null
+          emergency_contact?: string | null
           full_name?: string
+          gender?: string | null
+          how_found_us?: string | null
           id?: string
+          medications?: string[] | null
           notes?: string | null
           phone?: string | null
+          previous_procedures?: Json | null
+          skin_type?: string | null
+          surgeries?: Json | null
           tags?: string[] | null
           updated_at?: string
         }
@@ -295,43 +337,193 @@ export type Database = {
       }
       clinics: {
         Row: {
+          address: string | null
+          catalog_slug: string | null
+          city: string | null
+          cover_url: string | null
           created_at: string
+          description: string | null
           email: string | null
           id: string
+          instagram: string | null
           logo_url: string | null
           name: string
           phone: string | null
           plan: string
           primary_color: string | null
           slug: string
+          state: string | null
           status: Database["public"]["Enums"]["clinic_status"]
           updated_at: string
+          whatsapp_attendant: string | null
+          whatsapp_owner: string | null
+          zip: string | null
         }
         Insert: {
+          address?: string | null
+          catalog_slug?: string | null
+          city?: string | null
+          cover_url?: string | null
           created_at?: string
+          description?: string | null
           email?: string | null
           id?: string
+          instagram?: string | null
           logo_url?: string | null
           name: string
           phone?: string | null
           plan?: string
           primary_color?: string | null
           slug: string
+          state?: string | null
           status?: Database["public"]["Enums"]["clinic_status"]
           updated_at?: string
+          whatsapp_attendant?: string | null
+          whatsapp_owner?: string | null
+          zip?: string | null
         }
         Update: {
+          address?: string | null
+          catalog_slug?: string | null
+          city?: string | null
+          cover_url?: string | null
           created_at?: string
+          description?: string | null
           email?: string | null
           id?: string
+          instagram?: string | null
           logo_url?: string | null
           name?: string
           phone?: string | null
           plan?: string
           primary_color?: string | null
           slug?: string
+          state?: string | null
           status?: Database["public"]["Enums"]["clinic_status"]
           updated_at?: string
+          whatsapp_attendant?: string | null
+          whatsapp_owner?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category_id: string | null
+          clinic_id: string
+          created_at: string
+          date: string
+          description: string
+          due_date: string | null
+          id: string
+          installment_number: number | null
+          installments_total: number | null
+          notes: string | null
+          paid: boolean
+          paid_at: string | null
+          parent_expense_id: string | null
+          recurrence: string | null
+          recurring: boolean
+        }
+        Insert: {
+          amount: number
+          category_id?: string | null
+          clinic_id: string
+          created_at?: string
+          date?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          installment_number?: number | null
+          installments_total?: number | null
+          notes?: string | null
+          paid?: boolean
+          paid_at?: string | null
+          parent_expense_id?: string | null
+          recurrence?: string | null
+          recurring?: boolean
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          clinic_id?: string
+          created_at?: string
+          date?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          installment_number?: number | null
+          installments_total?: number | null
+          notes?: string | null
+          paid?: boolean
+          paid_at?: string | null
+          parent_expense_id?: string | null
+          recurrence?: string | null
+          recurring?: boolean
+        }
+        Relationships: []
+      }
+      financial_categories: {
+        Row: {
+          clinic_id: string
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          type: string
+        }
+        Insert: {
+          clinic_id: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          type: string
+        }
+        Update: {
+          clinic_id?: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      lead_form_templates: {
+        Row: {
+          clinic_id: string | null
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          fields: Json
+          id: string
+          is_global: boolean
+          kind: Database["public"]["Enums"]["lead_form_kind"]
+          name: string
+        }
+        Insert: {
+          clinic_id?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_global?: boolean
+          kind?: Database["public"]["Enums"]["lead_form_kind"]
+          name: string
+        }
+        Update: {
+          clinic_id?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_global?: boolean
+          kind?: Database["public"]["Enums"]["lead_form_kind"]
+          name?: string
         }
         Relationships: []
       }
@@ -339,32 +531,53 @@ export type Database = {
         Row: {
           active: boolean
           clinic_id: string
+          cover_url: string | null
           created_at: string
+          description: string | null
+          fields: Json
           headline: string
           id: string
+          kind: Database["public"]["Enums"]["lead_form_kind"]
           procedure_id: string | null
+          redirect_url: string | null
           slug: string
           subheadline: string | null
+          success_message: string | null
+          theme_color: string | null
         }
         Insert: {
           active?: boolean
           clinic_id: string
+          cover_url?: string | null
           created_at?: string
+          description?: string | null
+          fields?: Json
           headline: string
           id?: string
+          kind?: Database["public"]["Enums"]["lead_form_kind"]
           procedure_id?: string | null
+          redirect_url?: string | null
           slug: string
           subheadline?: string | null
+          success_message?: string | null
+          theme_color?: string | null
         }
         Update: {
           active?: boolean
           clinic_id?: string
+          cover_url?: string | null
           created_at?: string
+          description?: string | null
+          fields?: Json
           headline?: string
           id?: string
+          kind?: Database["public"]["Enums"]["lead_form_kind"]
           procedure_id?: string | null
+          redirect_url?: string | null
           slug?: string
           subheadline?: string | null
+          success_message?: string | null
+          theme_color?: string | null
         }
         Relationships: [
           {
@@ -385,41 +598,53 @@ export type Database = {
       }
       leads: {
         Row: {
+          assigned_to: string | null
           clinic_id: string
           created_at: string
           email: string | null
+          form_data: Json | null
           id: string
+          kanban_stage: string
           lead_form_id: string | null
           message: string | null
           name: string
           phone: string | null
           procedure_id: string | null
+          scheduled_appointment_id: string | null
           source: string | null
           status: Database["public"]["Enums"]["lead_status"]
         }
         Insert: {
+          assigned_to?: string | null
           clinic_id: string
           created_at?: string
           email?: string | null
+          form_data?: Json | null
           id?: string
+          kanban_stage?: string
           lead_form_id?: string | null
           message?: string | null
           name: string
           phone?: string | null
           procedure_id?: string | null
+          scheduled_appointment_id?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
         }
         Update: {
+          assigned_to?: string | null
           clinic_id?: string
           created_at?: string
           email?: string | null
+          form_data?: Json | null
           id?: string
+          kanban_stage?: string
           lead_form_id?: string | null
           message?: string | null
           name?: string
           phone?: string | null
           procedure_id?: string | null
+          scheduled_appointment_id?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
         }
@@ -576,39 +801,84 @@ export type Database = {
           },
         ]
       }
+      procedure_products: {
+        Row: {
+          clinic_id: string
+          id: string
+          procedure_id: string
+          product_id: string
+          quantity_used: number
+        }
+        Insert: {
+          clinic_id: string
+          id?: string
+          procedure_id: string
+          product_id: string
+          quantity_used?: number
+        }
+        Update: {
+          clinic_id?: string
+          id?: string
+          procedure_id?: string
+          product_id?: string
+          quantity_used?: number
+        }
+        Relationships: []
+      }
       procedures: {
         Row: {
           active: boolean
+          category: string | null
           clinic_id: string
+          cover_url: string | null
           created_at: string
           description: string | null
           duration_min: number
           id: string
+          images: string[] | null
+          instructions_post: string | null
+          instructions_pre: string | null
+          lead_form_id: string | null
           name: string
           photos: string[] | null
           price: number
+          show_price: boolean | null
         }
         Insert: {
           active?: boolean
+          category?: string | null
           clinic_id: string
+          cover_url?: string | null
           created_at?: string
           description?: string | null
           duration_min?: number
           id?: string
+          images?: string[] | null
+          instructions_post?: string | null
+          instructions_pre?: string | null
+          lead_form_id?: string | null
           name: string
           photos?: string[] | null
           price?: number
+          show_price?: boolean | null
         }
         Update: {
           active?: boolean
+          category?: string | null
           clinic_id?: string
+          cover_url?: string | null
           created_at?: string
           description?: string | null
           duration_min?: number
           id?: string
+          images?: string[] | null
+          instructions_post?: string | null
+          instructions_pre?: string | null
+          lead_form_id?: string | null
           name?: string
           photos?: string[] | null
           price?: number
+          show_price?: boolean | null
         }
         Relationships: [
           {
@@ -619,6 +889,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      products: {
+        Row: {
+          active: boolean
+          brand: string | null
+          category: string | null
+          clinic_id: string
+          created_at: string
+          current_stock: number
+          id: string
+          image_url: string | null
+          last_purchase_date: string | null
+          last_purchase_price: number | null
+          last_purchase_qty: number | null
+          min_stock: number
+          name: string
+          notes: string | null
+          sku: string | null
+          supplier: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          clinic_id: string
+          created_at?: string
+          current_stock?: number
+          id?: string
+          image_url?: string | null
+          last_purchase_date?: string | null
+          last_purchase_price?: number | null
+          last_purchase_qty?: number | null
+          min_stock?: number
+          name: string
+          notes?: string | null
+          sku?: string | null
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          clinic_id?: string
+          created_at?: string
+          current_stock?: number
+          id?: string
+          image_url?: string | null
+          last_purchase_date?: string | null
+          last_purchase_price?: number | null
+          last_purchase_qty?: number | null
+          min_stock?: number
+          name?: string
+          notes?: string | null
+          sku?: string | null
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       professionals: {
         Row: {
@@ -769,6 +1102,45 @@ export type Database = {
           },
         ]
       }
+      stock_movements: {
+        Row: {
+          appointment_id: string | null
+          clinic_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          product_id: string
+          quantity: number
+          reason: string | null
+          type: string
+          unit_cost: number | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          clinic_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          product_id: string
+          quantity: number
+          reason?: string | null
+          type: string
+          unit_cost?: number | null
+        }
+        Update: {
+          appointment_id?: string | null
+          clinic_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          product_id?: string
+          quantity?: number
+          reason?: string | null
+          type?: string
+          unit_cost?: number | null
+        }
+        Relationships: []
+      }
       treatment_records: {
         Row: {
           client_id: string
@@ -855,7 +1227,19 @@ export type Database = {
         | "no_show"
         | "canceled"
       clinic_status: "pending" | "active" | "suspended"
-      lead_status: "new" | "contacted" | "scheduled" | "won" | "lost"
+      lead_form_kind:
+        | "procedure"
+        | "product"
+        | "appointment"
+        | "generic"
+        | "catalog"
+      lead_status:
+        | "new"
+        | "contacted"
+        | "scheduled"
+        | "won"
+        | "lost"
+        | "converted"
       package_status: "active" | "completed" | "canceled"
       payment_status: "pending" | "paid" | "refunded" | "canceled"
       photo_kind: "before" | "after" | "evolution"
@@ -995,7 +1379,21 @@ export const Constants = {
         "canceled",
       ],
       clinic_status: ["pending", "active", "suspended"],
-      lead_status: ["new", "contacted", "scheduled", "won", "lost"],
+      lead_form_kind: [
+        "procedure",
+        "product",
+        "appointment",
+        "generic",
+        "catalog",
+      ],
+      lead_status: [
+        "new",
+        "contacted",
+        "scheduled",
+        "won",
+        "lost",
+        "converted",
+      ],
       package_status: ["active", "completed", "canceled"],
       payment_status: ["pending", "paid", "refunded", "canceled"],
       photo_kind: ["before", "after", "evolution"],
