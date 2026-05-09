@@ -2,7 +2,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, CalendarDays, Users, Sparkles as Procedures, FileText, Inbox,
   Wallet, Boxes, BarChart3, Settings as SettingsIcon, Search, Moon, Sun, LogOut,
-  Sparkle, Globe, UserCircle2,
+  Sparkle, Globe, UserCircle2, Sparkles,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useApp } from "@/store/AppStore";
