@@ -1,134 +1,117 @@
-# UNA — SaaS para Clínicas de Estética
+# Plano — Evolução completa do UNA
 
-Sistema multi-tenant completo com landing page pública, cadastro de clínicas com aprovação manual, e ambiente interno por clínica (slug na URL). Visual premium combinando com a logo (águia em gradiente azul → ciano → verde-água), com tema claro e escuro.
-
-## Stack
-
-- TanStack Start (React 19 + TanStack Router) — já é o stack do template
-- Lovable Cloud (Supabase por baixo) — Auth, Postgres, Storage, RLS
-- Tailwind v4 + shadcn/ui + tokens em `src/styles.css` (oklch)
-- React Hook Form + Zod, TanStack Query, date-fns, recharts
-
-> Observação: o template usa TanStack Router (não React Router DOM). Vou seguir a convenção do projeto — funcionalmente idêntico para o usuário final.
+Escopo grande. Vou dividir em **6 entregas sequenciais** dentro deste mesmo turno (não vou parar entre elas), cada uma com migração + UI. Confirme o plano e eu sigo direto.
 
 ---
 
-## 1. Identidade visual
+## Entrega 1 — Banco de dados (1 migração grande)
 
-Inspirada na logo enviada:
+Novas tabelas e colunas:
 
-- **Primary**: azul royal `#1E5FFF`
-- **Accent**: ciano `#22D3EE`
-- **Success/brand-soft**: verde-água `#34E0B8`
-- **Gradiente da marca**: `linear-gradient(135deg, #1E5FFF, #22D3EE, #34E0B8)`
-- Tipografia: Inter (UI) + Sora (títulos)
-- Tema claro: fundo off-white levemente azulado; tema escuro: fundo `#0B1220` com superfícies `#111A2E`
-- Sombras suaves, cantos `rounded-2xl`, glassmorphism leve no header da landing
-- Toggle de tema no header (claro/escuro/sistema)
+- `clinics`: + `address`, `city`, `state`, `zip`, `description`, `instagram`, `whatsapp_owner`, `whatsapp_attendant`, `cover_url`, `catalog_slug`
+- `clients`: + `cpf`, `gender`, `address`, `allergies` (text[]), `medications` (text[]), `chronic_conditions` (text[]), `surgeries` (jsonb), `previous_procedures` (jsonb), `skin_type`, `emergency_contact`, `how_found_us`, `avatar_url`
+- `procedures`: + `cover_url`, `images` (text[]), `category`, `show_price` (bool), `lead_form_id` (link), `instructions_pre`, `instructions_post`
+- **`products`** (estoque): name, sku, brand, category, unit, current_stock, min_stock, last_purchase_price, last_purchase_qty, last_purchase_date, supplier, notes, image_url
+- **`stock_movements`**: product_id, type (in/out/adjustment), quantity, unit_cost, reason, appointment_id, created_by
+- **`procedure_products`**: procedure_id, product_id, quantity_used (consumo automático)
+- `lead_forms`: + `description`, `fields` (jsonb — schema dinâmico), `cover_url`, `theme_color`, `success_message`, `redirect_url`, `kind` (procedure|product|appointment|generic), `procedure_id` opcional
+- **`lead_form_templates`** (pré-formulados editáveis): name, kind, fields jsonb, cover
+- `leads`: + `form_data` (jsonb com todas as respostas), `kanban_stage` (new/contacted/scheduled/converted/lost), `assigned_to`, `scheduled_appointment_id`
+- **`expenses`** (financeiro): description, amount, category, date, recurring (bool), recurrence (monthly/weekly/yearly), installments_total, installments_paid, parent_expense_id, paid (bool)
+- **`financial_categories`**: name, type (income/expense), color
+- `appointments`: + `confirmed` (bool), `reminder_sent` (bool)
 
----
+Todas com RLS por `clinic_id`.
 
-## 2. Modelo multi-tenant
+## Entrega 2 — Design system premium
 
-- Cada **clinic** tem `slug` único e `status` (`pending` | `active` | `suspended`).
-- Usuários pertencem a uma clínica via `clinic_members(user_id, clinic_id, role)`.
-- Roles: `owner`, `admin`, `reception`, `professional`, `finance`.
-- Toda tabela de domínio tem `clinic_id` e RLS força `clinic_id IN (SELECT clinic_id FROM clinic_members WHERE user_id = auth.uid())`.
-- Função `SECURITY DEFINER` `is_member_of(clinic_id)` e `has_clinic_role(clinic_id, role)` para evitar recursão.
-- Login só é permitido se a clínica do usuário estiver `active` (verificação no client + bloqueio via RLS).
+- Refino completo de `src/styles.css`: paleta mais sofisticada (blue/cyan + violet accent), gradientes, sombras em camadas, glass surfaces, animações (fade-in, slide-up, hover-lift)
+- Novo `Sidebar` com seções agrupadas (Operacional, Comercial, Gestão), avatar do usuário no rodapé com menu (Meu perfil → configurações)
+- Novos componentes: `StatCard` (com sparkline), `EmptyState`, `PageHeader`, `SectionCard`, `MetricRing`, `KanbanColumn`, `KanbanCard`
+- Animações com `tailwindcss-animate` + classes utilitárias (`hover-lift`, `shadow-brand-glow`)
 
----
+## Entrega 3 — Form Builder + Captação + Kanban
 
-## 3. Estrutura do banco (resumo)
+- **`/app/$slug/captacao`** (renomear "Leads"): tabs **Formulários** | **Kanban de Leads** | **Templates**
+- **Form Builder visual** (drag & drop com `@dnd-kit/core`):
+  - Componentes: Texto curto, Texto longo, E-mail, Telefone (BR mask), Número, Data, Hora, **Date+Time picker que cria appointment**, Select, Multi-select, Radio, Checkbox, Upload de imagem (storage), Avaliação por estrelas, **Bloco de imagem**, **Bloco de título/markdown**, Endereço, CPF, Termo de aceite
+  - Cada campo: label, placeholder, obrigatório, validação, ajuda
+  - Preview ao vivo lado a lado
+  - Cor do tema, capa, mensagem de sucesso, redirect
+  - Botão "Copiar link público" e "Copiar link WhatsApp"
+- **Templates pré-formulados editáveis**: Avaliação inicial, Pré-procedimento, Agendamento rápido, Catálogo de produtos, Pós-atendimento (NPS) — usuário clica "Usar template" → cria cópia editável
+- **Kanban de leads**: colunas Novo / Contatado / Agendado / Convertido / Perdido. Drag & drop entre colunas. Card mostra nome, formulário origem, tempo. **Click no card → Dialog** com todas as respostas formatadas + ações (WhatsApp, Marcar agenda, Mover stage, Converter em cliente)
+- **Filtro de período**: 7d / 30d / Customizado (Popover com Calendar range)
+- **Página pública `/c/$slug/f/$formSlug`**: renderiza formulário dinâmico bonito; campo Date+Time **agenda real** no `appointments` ao submeter
 
-```text
-clinics(id, name, slug, email, phone, status, plan, created_at)
-profiles(id=auth.uid, full_name, avatar_url, phone)
-app_role  ENUM('owner','admin','reception','professional','finance')
-clinic_members(id, clinic_id, user_id, role, active)
+## Entrega 4 — Procedimentos + Catálogo público + Clientes + Agenda + Prontuário
 
-clients(id, clinic_id, full_name, email, phone, birth_date, notes, tags[])
-client_anamnesis(id, client_id, clinic_id, data jsonb, updated_at)
-client_photos(id, client_id, clinic_id, url, kind 'before'|'after'|'evolution', taken_at, procedure_id)
+- **Procedimentos**:
+  - Lista em grid com cover image, badge categoria
+  - **Click → página detalhe `/app/$slug/procedimentos/$id`** com: editar tudo, galeria de imagens (upload), instruções pré/pós, **produtos consumidos** (selecionar do estoque + qtd), associar a formulário (gera link único), **estatísticas** (faturamento, nº atendimentos, clientes únicos) com filtro 7d/30d/custom
+  - Toggle "Mostrar preço público" (se off → "Sob consulta — combine com a profissional")
+  - Botões "Copiar link do formulário" / "Copiar link no catálogo"
+- **Catálogo público `/c/$slug/catalogo`**: hero com logo+capa, grid lindo de procedimentos com fotos, click abre detalhe + CTA "Tenho interesse" (abre form ou WhatsApp). Design único: tipografia display, cards glass, gradiente
+- **Clientes**:
+  - Lista com avatar, tags, último atendimento, LTV
+  - **Detalhe `/app/$slug/clientes/$id`** com tabs: Dados pessoais, Anamnese (alergias, medicações, condições, cirurgias, procedimentos anteriores, tipo de pele, contato emergência), Histórico de atendimentos, Fotos evolução, Pacotes, Financeiro do cliente
+  - Form de novo cliente em wizard de 3 etapas
+- **Agenda**:
+  - View semanal + diária + mensal (toggle)
+  - **Botão "Novo compromisso" → Dialog** com: cliente (Combobox com busca), procedimento (Combobox), profissional, sala, data (Calendar), hora+minuto, duração auto pelo procedimento, observações
+  - Combobox de cliente busca em tempo real
+  - **Barra de busca** filtra por cliente/procedimento/data
+  - Cards coloridos pela cor do profissional
+- **Prontuário**:
+  - Lista por cliente, timeline com fotos antes/depois lado a lado, anotações ricas, evolução visual
+  - Upload múltiplo, comparação de fotos (slider), exportar PDF do atendimento
 
-professionals(id, clinic_id, user_id?, name, color, specialties[])
-rooms(id, clinic_id, name)
-business_hours(id, clinic_id, weekday, opens_at, closes_at)
-schedule_blocks(id, clinic_id, professional_id?, room_id?, starts_at, ends_at, reason)
+## Entrega 5 — Estoque + Financeiro + Relatórios
 
-procedures(id, clinic_id, name, description, price, duration_min, photos[], active)
-appointments(id, clinic_id, client_id, professional_id, room_id?, procedure_id,
-             starts_at, ends_at, status 'scheduled'|'confirmed'|'done'|'no_show'|'canceled', notes)
+- **Estoque `/app/$slug/estoque`**:
+  - Grid de produtos com imagem, nome, **estoque atual em destaque**, última compra (qtd + preço unit + data), badge "baixo estoque" se < min_stock
+  - CRUD completo, registrar entrada (compra) com fornecedor, registrar saída avulsa, histórico de movimentações
+  - Alertas no topo: produtos abaixo do mínimo
+  - Quando appointment é marcado como "completed" → desconta automaticamente os `procedure_products` do estoque (trigger)
+- **Financeiro**:
+  - Tabs: Visão geral | Receitas | Despesas | Recorrentes | Parcelamentos | Projeção
+  - **Despesas avulsas e recorrentes** (mensal/semanal/anual) com geração automática
+  - **Parcelamentos**: 1 despesa pai → N parcelas filhas com vencimento
+  - **Projeção próximos 6 meses**: receita estimada (appointments confirmados + recorrentes esperados) vs despesas (recorrentes + parcelas pendentes) → gráfico de fluxo de caixa projetado
+  - Categorias customizáveis com cor, gráfico de pizza por categoria
+  - Atualização automática conforme agendamentos confirmam
+- **Relatórios** (reformulação total):
+  - Cards executivos: Faturamento (mês/comp. mês ant.), Ticket médio, Taxa conversão de leads, Taxa de no-show, Cliente mais valioso, Procedimento campeão
+  - Gráficos: Faturamento mensal (linha), Receita por procedimento (barras), Funil de leads (kanban → conversão), Mapa de calor de horários mais ocupados, Retenção de clientes
+  - Filtro de período global
+  - Botão exportar PDF/CSV
 
-lead_forms(id, clinic_id, procedure_id, slug, headline, subheadline, active)
-leads(id, clinic_id, lead_form_id?, procedure_id?, name, phone, email, message, source, status, created_at)
+## Entrega 6 — Configurações + Perfil + Demo seed massivo
 
-treatment_records(id, clinic_id, client_id, professional_id, procedure_id,
-                  performed_at, notes, photos[])
-packages(id, clinic_id, client_id, procedure_id, total_sessions, used_sessions, price, status)
-payments(id, clinic_id, client_id, package_id?, appointment_id?, amount, method, paid_at, status)
-```
-
-Todas com RLS habilitada e policies por `clinic_id`. SQL completo entregue ao final do desenvolvimento (também irá rodar via migrations do Cloud).
-
----
-
-## 4. Telas
-
-### Públicas
-- `/` **Landing**: hero com gradiente da marca + mockup, benefícios, "como funciona", módulos, depoimentos, planos, FAQ, CTA, footer.
-- `/cadastro` Cria clínica + usuário owner. Mostra "Conta criada — aguardando ativação".
-- `/login` Email + senha. Bloqueia se clínica `pending`.
-- `/c/:slug/captacao/:formSlug` Formulário público de captação de leads (gera link único por procedimento).
-
-### Internas (`/app/:slug/...`)
-- **Dashboard** — agendamentos do dia, novos leads, faturamento do mês, taxa de no-show, próximos aniversariantes.
-- **Agenda** — calendário semanal e diário, filtro por profissional/sala, drag-to-create, bloqueios.
-- **Clientes** — lista com busca, ficha completa (dados, anamnese, fotos antes/depois, histórico, pacotes).
-- **Procedimentos** — CRUD com preço, duração, fotos, descrição.
-- **Captação** — gerar links de formulário por procedimento, listar leads, mover para cliente, botão WhatsApp.
-- **Prontuário** — timeline por cliente com fotos e procedimentos.
-- **Financeiro** — pacotes, sessões restantes, pagamentos, recebíveis do mês.
-- **Relatórios** — faturamento, procedimentos mais vendidos, ocupação de agenda, conversão de leads.
-- **Configurações** — clínica, horários de funcionamento, profissionais, salas, equipe (convites por email), tema.
-
-Botões "Enviar WhatsApp" abrem `https://wa.me/<phone>?text=...` em nova aba.
-
----
-
-## 5. Fluxo de usuário
-
-1. Visitante acessa `/` → clica em "Criar conta" → preenche `/cadastro`.
-2. Sistema cria `auth.user`, `clinic` (status `pending`, slug gerado), `clinic_members` (role `owner`).
-3. Tela "Aguardando aprovação". Você (super-admin) muda `status` para `active` no Supabase.
-4. Usuário faz login → redireciona para `/app/{slug}/dashboard`.
-5. Dentro do app, sidebar com módulos; topbar com troca de clínica (se o user pertencer a mais de uma) e toggle de tema.
-
----
-
-## 6. Plano de execução (passo a passo)
-
-1. Ativar Lovable Cloud.
-2. Criar migration com schema completo + RLS + funções `is_member_of` / `has_clinic_role` + trigger `on_auth_user_created` para criar `profile`.
-3. Configurar design system em `src/styles.css` (tokens claro/escuro + gradiente + fontes) e `ThemeProvider`.
-4. Layout base: `__root` com QueryClient + Theme + Toaster; rotas públicas vs `/app/$slug` (layout autenticado com guard).
-5. Landing page (`/`) — hero, features, depoimentos, pricing, FAQ, CTA, footer.
-6. `/cadastro` e `/login` com validação Zod e mensagens claras.
-7. Layout interno `/app/$slug` com sidebar, topbar, breadcrumbs, guard de membership + status `active`.
-8. Módulos na ordem: Dashboard → Clientes → Procedimentos → Agenda → Captação/Leads → Prontuário → Financeiro → Relatórios → Configurações.
-9. Storage bucket `clinic-media` (fotos de clientes/procedimentos) com policies por clínica.
-10. Polimento, responsividade, dark mode, estados de loading/empty/erro.
-11. Entrega do SQL completo num arquivo `docs/schema.sql` para você copiar/colar se quiser rodar manualmente (além da migration aplicada).
+- **Configurações** (reformulação):
+  - Tabs: **Clínica** (nome, descrição, endereço completo, instagram, WhatsApp proprietária, WhatsApp atendimento, logo upload, capa upload — slug **escondido**, gerado automaticamente a partir do nome) | **Equipe** (profissionais com cor, especialidades, foto, convidar membro) | **Salas** | **Horário de funcionamento** | **Categorias financeiras** | **Identidade visual** (cor primária custom)
+- **Menu do usuário** (avatar canto superior): Meu Perfil, Configurações da clínica, Tema, Sair. "Meu Perfil" → `/app/$slug/configuracoes?tab=perfil` editando nome próprio, foto, e atalhos para clínica
+- **Demo seed massivo**: popular **tudo** — 25 clientes com anamnese completa, 15 procedimentos com fotos e produtos vinculados, 20 produtos de estoque com movimentações, 80 appointments espalhados (passados/futuros/cancelados), 60 pagamentos, 30 leads em vários stages do kanban, 5 formulários (1 por kind), 12 despesas (avulsas/recorrentes/parceladas), templates de form, fotos de evolução, 4 profissionais, 3 salas. Dashboard fica **cheia** de dados visuais
 
 ---
 
 ## Detalhes técnicos
 
-- **Slug**: gerado de `name` com fallback numérico se colidir (`minha-clinica`, `minha-clinica-2`).
-- **Guard de rota**: `beforeLoad` em `/app/$slug` busca membership via server fn; redireciona para `/login` ou `/sem-acesso`.
-- **RLS**: usar `SECURITY DEFINER` functions para evitar recursão (padrão do guia user-roles).
-- **Storage**: caminho `clinic-media/{clinic_id}/clients/{client_id}/{uuid}.jpg`; policies validam `clinic_id` no path.
-- **Performance**: TanStack Query para cache; loaders por rota onde fizer sentido (dentro de `_authenticated`).
-- **SEO**: cada rota pública com `head()` próprio (title, description, og).
+- Drag & drop: `@dnd-kit/core` + `@dnd-kit/sortable`
+- Combobox: `cmdk` (já instalado via shadcn `command`)
+- Calendar range: shadcn `calendar` mode="range"
+- Markdown leve: `react-markdown`
+- PDF: `jspdf` + `html2canvas`
+- Upload: bucket `clinic-media` com pastas `clinics/`, `procedures/`, `products/`, `clients/`, `forms/`
+- Renderer público de formulário lê `fields` jsonb e renderiza componente correspondente
+- Trigger SQL: `appointment.status='completed'` → insere `stock_movements` negativos por `procedure_products`
+- Trigger SQL: `expenses.recurring=true` → função que gera próximas ocorrências (cron via pg_cron diário)
+- Catálogo: rota pública SSR-friendly com og tags e og:image = cover da clínica
 
-Pronto para começar pela ativação do Cloud e migration do schema assim que aprovar.
+## Riscos / decisões automáticas
+
+- Slug da clínica passa a ser derivado do nome (slugificado). Migrei o existente preservando valor atual; só novos cadastros recebem slug auto.
+- Trigger de consumo de estoque só dispara em transição para "completed" — evita duplicar.
+- Form fields como jsonb (sem tabela normalizada) — flexibilidade máxima, validado por zod no client.
+
+Confirma? Se sim, começo pela migração e sigo direto até a entrega 6 sem parar.
