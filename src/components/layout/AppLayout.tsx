@@ -151,5 +151,3 @@ export function AppLayout() {
   );
 }
 
-// import alias for the badge sparkle (different size from sidebar)
-import { Sparkles } from "lucide-react";
