@@ -47,7 +47,7 @@ function Dashboard() {
           .order("current_stock"),
         supabase.from("leads").select("id, kanban_stage").eq("clinic_id", clinic.id),
         supabase.from("appointments").select("procedure_id, procedures(name, price)")
-          .eq("clinic_id", clinic.id).eq("status", "completed").gte("starts_at", monthStart.toISOString()),
+          .eq("clinic_id", clinic.id).eq("status", "done").gte("starts_at", monthStart.toISOString()),
         supabase.from("expenses").select("amount, date").eq("clinic_id", clinic.id)
           .gte("date", sixMonthsAgo.toISOString().slice(0, 10)),
       ]);
