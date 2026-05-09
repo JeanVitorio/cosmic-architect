@@ -4,6 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { ensureDemoAccount } from "@/lib/demo-seed.functions";
+import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import { UnaLogo } from "@/components/una-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +27,27 @@ type FormData = z.infer<typeof schema>;
 
 function Login() {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) });
+  const ensureDemo = useServerFn(ensureDemoAccount);
+  const [demoLoading, setDemoLoading] = useState(false);
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  const handleDemo = async () => {
+    setDemoLoading(true);
+    try {
+      const creds = await ensureDemo();
+      setValue("email", creds.email);
+      setValue("password", creds.password);
+      const { data, error } = await supabase.auth.signInWithPassword({ email: creds.email, password: creds.password });
+      if (error) throw error;
+      if (!data.user) throw new Error("Falha no login demo");
+      toast.success("Acessando conta demo...");
+      navigate({ to: "/app/$slug/dashboard", params: { slug: creds.slug } });
+    } catch (e: any) {
+      toast.error(e.message ?? "Falha ao acessar demo");
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   const onSubmit = async (values: FormData) => {
     try {
@@ -78,6 +102,30 @@ function Login() {
               {isSubmitting ? "Entrando..." : "Entrar"}
             </Button>
           </form>
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">ou</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <Button
+            type="button"
+            onClick={handleDemo}
+            disabled={demoLoading}
+            variant="outline"
+            className="w-full border-primary/40 hover:bg-primary/5"
+          >
+            <Sparkles className="mr-2 h-4 w-4 text-primary" />
+            {demoLoading ? "Preparando demo..." : "Acessar conta DEMO"}
+          </Button>
+
+          <div className="mt-3 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3 text-xs text-muted-foreground">
+            <div className="font-semibold text-foreground">Credenciais demo (preenchidas automaticamente):</div>
+            <div className="mt-1">📧 <span className="font-mono">demo@una.app</span></div>
+            <div>🔑 <span className="font-mono">demo123456</span></div>
+            <div className="mt-1 text-[11px]">Clínica já ativa com dados de exemplo (clientes, agendamentos, leads, financeiro).</div>
+          </div>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Ainda não tem conta? <Link to="/cadastro" className="font-medium text-primary hover:underline">Criar conta</Link>

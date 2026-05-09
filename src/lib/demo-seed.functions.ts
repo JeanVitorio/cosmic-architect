@@ -111,7 +111,7 @@ export const ensureDemoAccount = createServerFn({ method: "POST" }).handler(asyn
           procedure_id: proc.id,
           starts_at: day.toISOString(),
           ends_at: end.toISOString(),
-          status: i < 3 ? "completed" : "scheduled",
+          status: (i < 3 ? "done" : "scheduled") as "done" | "scheduled",
         });
       }
       await supabaseAdmin.from("appointments").insert(appts);
